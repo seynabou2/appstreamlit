@@ -1,0 +1,31 @@
+
+# Fichiers Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Bases de données
+*.db
+*.sqlite
+*.sqlite3
+data/*.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Streamlit
+.streamlit/
+
+# Données uploadées
+data/uploaded/*
+!data/uploaded/.gitkeep
