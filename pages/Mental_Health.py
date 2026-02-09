@@ -12,7 +12,6 @@ from components.health.visualizations import render_all_kpis
 # Configuration de la page
 st.set_page_config(
     page_title="Student Mental Health Analytics",
-    page_icon="🧠",
     layout="wide"
 )
 
@@ -27,42 +26,32 @@ st.markdown("""
     }
     .subtitle {
         text-align: center;
-        color: #666;
+        color: #95A5A6;
         margin-bottom: 2rem;
-    }
-    .alert-box {
-        padding: 1rem;
-        background-color: #FFF3CD;
-        border-left: 4px solid #FFC107;
-        margin: 1rem 0;
-        border-radius: 5px;
-    }
-    .info-box {
-        padding: 1rem;
-        background-color: #D1ECF1;
-        border-left: 4px solid #0C5460;
-        margin: 1rem 0;
-        border-radius: 5px;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # En-tête
-st.markdown('<h1 class="main-title">🧠 Student Mental Health Analysis</h1>', unsafe_allow_html=True)
+st.markdown('<h1 class="main-title">Student Mental Health Analysis</h1>', unsafe_allow_html=True)
 st.markdown('<p class="subtitle">Analyse de la Santé Mentale des Étudiants</p>', unsafe_allow_html=True)
 
-# Message d'avertissement
+# Message d'avertissement éthique - EN HAUT AVANT TOUT
 st.markdown("""
-<div class="alert-box">
-    <strong>⚠️ Note Importante :</strong> Cette analyse est réalisée à des fins pédagogiques uniquement. 
-    Les données présentées ne doivent pas être utilisées pour un diagnostic médical. 
-    Si vous ressentez des difficultés psychologiques, consultez un professionnel de santé.
+<div style="padding: 1.2rem; background-color: rgba(255, 193, 7, 0.15); border-left: 5px solid #FFC107; border-radius: 8px; margin-bottom: 1.5rem;">
+    <p style="color: #F39C12; font-weight: 600; margin: 0 0 0.5rem 0; font-size: 1.1rem;">
+    Note importante
+    </p>
+    <p style="color: #E67E22; margin: 0; font-size: 0.95rem; line-height: 1.5;">
+    Cette analyse est réalisée dans un cadre éducatif. Les données sur la santé mentale sont sensibles. 
+    Si vous ou quelqu'un que vous connaissez éprouvez des difficultés psychologiques, veuillez consulter un professionnel.
+    </p>
 </div>
 """, unsafe_allow_html=True)
 
 # Sidebar pour l'upload
 with st.sidebar:
-    st.header("📁 Import des Données")
+    st.header("Import des Données")
     
     uploaded_file = st.file_uploader(
         "Choisissez le fichier CSV Mental Health",
@@ -71,18 +60,6 @@ with st.sidebar:
     )
     
     st.markdown("---")
-    
-    st.info("""
-    📌 **Format attendu :**
-    - Gender
-    - Age
-    - Year (année d'études)
-    - CGPA (performance académique)
-    - Depression (Yes/No)
-    - Anxiety (Yes/No)
-    - Panic Attack (Yes/No)
-    - Treatment (Yes/No)
-    """)
 
 # Contenu principal
 if uploaded_file is not None:
@@ -95,8 +72,10 @@ if uploaded_file is not None:
     if df is not None:
         st.markdown("---")
         
-        # Afficher les filtres et récupérer les valeurs
-        filters = render_filters(db)
+        # Afficher les filtres dans la sidebar AVANT les KPI
+        with st.sidebar:
+            st.markdown("---")
+            filters = render_filters(db)
         
         st.markdown("---")
         
@@ -105,7 +84,7 @@ if uploaded_file is not None:
         
         # Section données brutes (optionnel)
         st.markdown("---")
-        with st.expander("📋 Voir les Données Brutes"):
+        with st.expander("Voir les Données Brutes"):
             st.dataframe(df, use_container_width=True, height=400)
             
             # Statistiques de base
@@ -132,7 +111,7 @@ if uploaded_file is not None:
             # Bouton de téléchargement
             csv = df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Télécharger les données filtrées (CSV)",
+                label="Télécharger les données filtrées (CSV)",
                 data=csv,
                 file_name='mental_health_filtered.csv',
                 mime='text/csv',
@@ -140,10 +119,16 @@ if uploaded_file is not None:
 
 else:
     # Message d'accueil si aucun fichier n'est uploadé
-    st.info("👆 Veuillez uploader le fichier CSV Student Mental Health pour commencer l'analyse")
+    st.markdown("""
+    <div style="padding: 1rem; background-color: rgba(52, 152, 219, 0.15); border-left: 5px solid #3498DB; border-radius: 8px; margin-bottom: 1.5rem;">
+        <p style="color: #3498DB; margin: 0; font-size: 1rem;">
+        Veuillez uploader le fichier CSV Student Mental Health pour commencer l'analyse
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
     
     # Instructions
-    st.markdown("### 📖 Instructions")
+    st.markdown("### Instructions")
     st.markdown("""
     1. Téléchargez le dataset depuis [Kaggle - Student Mental Health](https://www.kaggle.com/datasets/shariful07/student-mental-health)
     2. Uploadez le fichier `Student Mental health.csv` dans la barre latérale
@@ -152,18 +137,18 @@ else:
     """)
     
     # Aperçu des KPI
-    st.markdown("### 🎯 KPI Disponibles")
+    st.markdown("### KPI Disponibles")
     
     col1, col2 = st.columns(2)
     
     with col1:
         st.markdown("""
-        **📊 KPI 1 : Vue d'Ensemble de la Santé Mentale**
+        **Vue d'Ensemble de la Santé Mentale**
         - Répartition des étudiants par condition (dépression, anxiété, attaques de panique)
         - Taux de prévalence globaux
         - Statistiques sur le traitement
         
-        **👥 KPI 2 : Analyse par Genre**
+        **Analyse par Genre**
         - Comparaison des taux de dépression, anxiété et attaques de panique entre genres
         - Identification des groupes à risque
         - Distribution par genre
@@ -171,46 +156,66 @@ else:
     
     with col2:
         st.markdown("""
-        **📈 KPI 3 : Corrélation Performance Académique vs Santé Mentale**
+        **Corrélation Performance Académique vs Santé Mentale**
         - Scatter plot : CGPA vs conditions mentales
         - Impact du stress sur les résultats académiques
         - CGPA moyen par état de santé mentale
         
-        **⚠️ KPI 4 : Facteurs de Risque et Traitement**
+        **Facteurs de Risque et Traitement**
         - Distribution des facteurs de risque
         - Taux de traitement
         - Analyse de l'efficacité du traitement
         """)
-    
-    # Ressources d'aide
-    st.markdown("---")
-    st.markdown("### 🆘 Ressources d'Aide")
-    
-    st.markdown("""
-    <div class="info-box">
-        Si vous ou quelqu'un que vous connaissez avez besoin d'aide :
-        <ul>
-            <li><strong>3114</strong> : Numéro national de prévention du suicide (France)</li>
-            <li><strong>Fil Santé Jeunes</strong> : 0 800 235 236 (gratuit et anonyme)</li>
-            <li><strong>SOS Amitié</strong> : 09 72 39 40 50</li>
-            <li><strong>Nightline</strong> : Service d'écoute par et pour les étudiants</li>
-            <li><strong>Psychologues.fr</strong> : Annuaire de psychologues</li>
-        </ul>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Information sur les services universitaires
-    st.markdown("### 🏫 Services Universitaires")
-    st.markdown("""
-    La plupart des universités proposent des services de soutien psychologique gratuits pour les étudiants :
-    - Services de santé universitaire (SSU)
-    - Bureaux d'aide psychologique universitaire (BAPU)
-    - Cellules d'écoute et de soutien
-    
-    **N'hésitez pas à contacter le service de santé de votre établissement.**
-    """)
+
+# Ressources d'aide - TOUJOURS VISIBLE EN BAS
+st.markdown("---")
+st.markdown("### Ressources d'Aide")
+
+st.markdown("""
+<div style="padding: 1.5rem; background-color: rgba(26, 188, 156, 0.15); border-left: 5px solid #1ABC9C; border-radius: 8px; margin-bottom: 1rem;">
+    <p style="color: #16A085; margin: 0 0 1rem 0; font-size: 1rem; line-height: 1.6; font-weight: 600;">
+    Si vous ou quelqu'un que vous connaissez avez besoin d'aide :
+    </p>
+    <ul style="color: #16A085; margin: 0; padding-left: 1.5rem; line-height: 1.8;">
+        <li><strong>3114</strong> : Numéro national de prévention du suicide (France)</li>
+        <li><strong>Fil Santé Jeunes</strong> : 0 800 235 236 (gratuit et anonyme)</li>
+        <li><strong>SOS Amitié</strong> : 09 72 39 40 50</li>
+        <li><strong>Nightline</strong> : Service d'écoute par et pour les étudiants</li>
+        <li><strong>Psychologues.fr</strong> : Annuaire de psychologues</li>
+    </ul>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("---")
+
+# Information sur les services universitaires
+st.markdown("### Services Universitaires")
+
+st.markdown("""
+<div style="padding: 1.5rem; background-color: rgba(155, 89, 182, 0.15); border-left: 5px solid #9B59B6; border-radius: 8px; margin-bottom: 1rem;">
+    <p style="color: #8E44AD; margin: 0 0 1rem 0; font-size: 1rem; line-height: 1.6; font-weight: 600;">
+    La plupart des universités proposent :
+    </p>
+    <ul style="color: #8E44AD; margin: 0 0 1rem 0; padding-left: 1.5rem; line-height: 1.8;">
+        <li>Services de santé universitaire (SSU)</li>
+        <li>Consultations psychologiques gratuites</li>
+        <li>Cellules d'écoute et de soutien</li>
+        <li>Aménagements d'études si nécessaire</li>
+    </ul>
+    <p style="color: #8E44AD; margin: 0; font-size: 0.9rem;">
+    Contactez le service de santé de votre établissement pour plus d'informations.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # Footer
 st.markdown("---")
-st.caption("🧠 Student Mental Health Analytics | Projet MBAESG 2024-2025")
-st.caption("⚕️ En cas d'urgence, contactez le 15 (SAMU) ou le 112 (numéro d'urgence européen)")
+st.caption("Student Mental Health Analytics | Projet MBAESG 2025-2026")
+
+st.markdown("""
+<div style="padding: 0.8rem; background-color: rgba(231, 76, 60, 0.15); border-left: 5px solid #E74C3C; border-radius: 8px; margin-top: 1rem;">
+    <p style="color: #C0392B; margin: 0; font-size: 0.9rem; font-weight: 600; text-align: center;">
+     En cas d'urgence, contactez le 15 (SAMU) ou le 112 (numéro d'urgence européen)
+    </p>
+</div>
+""", unsafe_allow_html=True)

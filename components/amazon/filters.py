@@ -11,12 +11,12 @@ def render_filters(db) -> Dict[str, Any]:
     Returns:
         Dict contenant les filtres sélectionnés
     """
-    st.sidebar.header("🔍 Filtres")
+    st.sidebar.header("Filtres")
     
     filters = {}
     
     # Filtre par type de contenu
-    st.sidebar.subheader("📺 Type de Contenu")
+    st.sidebar.subheader("Type de Contenu")
     content_types = db.get_unique_values('type')
     filters['content_type'] = st.sidebar.multiselect(
         "Sélectionnez le type",
@@ -25,7 +25,7 @@ def render_filters(db) -> Dict[str, Any]:
     )
     
     # Filtre par année de sortie
-    st.sidebar.subheader("📅 Année de Sortie")
+    st.sidebar.subheader("Année de Sortie")
     min_year, max_year = db.get_year_range()
     if min_year and max_year:
         filters['year_range'] = st.sidebar.slider(
@@ -38,7 +38,7 @@ def render_filters(db) -> Dict[str, Any]:
         filters['year_range'] = None
     
     # Filtre par rating
-    st.sidebar.subheader("⭐ Classification")
+    st.sidebar.subheader("Classification")
     ratings = db.get_unique_values('rating')
     filters['rating'] = st.sidebar.multiselect(
         "Sélectionnez les classifications",
@@ -47,7 +47,7 @@ def render_filters(db) -> Dict[str, Any]:
     )
     
     # Filtre par pays
-    st.sidebar.subheader("🌍 Pays de Production")
+    st.sidebar.subheader("Pays de Production")
     countries = db.get_top_countries(20)  # Top 20 pays
     filters['country'] = st.sidebar.multiselect(
         "Sélectionnez les pays",
@@ -56,7 +56,7 @@ def render_filters(db) -> Dict[str, Any]:
     )
     
     # Filtre par genre
-    st.sidebar.subheader("🎭 Genres")
+    st.sidebar.subheader("Genres")
     genres = db.get_top_genres(15)  # Top 15 genres
     filters['genre'] = st.sidebar.multiselect(
         "Sélectionnez les genres",
@@ -66,7 +66,7 @@ def render_filters(db) -> Dict[str, Any]:
     
     # Bouton reset
     st.sidebar.markdown("---")
-    if st.sidebar.button("🔄 Réinitialiser les filtres"):
+    if st.sidebar.button("Réinitialiser les filtres"):
         st.rerun()
     
     return filters

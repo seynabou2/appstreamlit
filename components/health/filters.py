@@ -11,11 +11,11 @@ def render_filters(db):
         dict: Dictionnaire contenant les valeurs des filtres
     """
     
-    st.sidebar.header("🔍 Filtres d'Analyse")
+    st.sidebar.header("Filtres d'Analyse")
     st.sidebar.markdown("Affinez votre analyse en appliquant des filtres")
     
     # Filtre 1 : Genre
-    st.sidebar.subheader("👥 Genre")
+    st.sidebar.subheader("Genre")
     
     # Récupérer les genres disponibles
     available_genders = db.get_available_genders()
@@ -32,7 +32,7 @@ def render_filters(db):
         st.sidebar.warning("Aucun genre disponible")
     
     # Filtre 2 : Tranche d'âge
-    st.sidebar.subheader("🎂 Âge")
+    st.sidebar.subheader(" Âge")
     
     # Récupérer la plage d'âges depuis la DB
     age_range_data = db.get_age_range()
@@ -52,7 +52,7 @@ def render_filters(db):
     )
     
     # Filtre 3 : Année d'études
-    st.sidebar.subheader("📚 Année d'Études")
+    st.sidebar.subheader("Année d'Études")
     
     # Récupérer les années disponibles
     available_years = db.get_available_years()
@@ -70,7 +70,7 @@ def render_filters(db):
     
     # Bouton de réinitialisation
     st.sidebar.markdown("---")
-    if st.sidebar.button("🔄 Réinitialiser tous les filtres", use_container_width=True):
+    if st.sidebar.button("Réinitialiser tous les filtres", use_container_width=True):
         st.rerun()
     
     # Retourner le dictionnaire de filtres
@@ -90,16 +90,16 @@ def render_filters(db):
         active_filters.append(f"Année: {', '.join(map(str, selected_years))}")
     
     if active_filters:
-        st.sidebar.success(f"✅ {len(active_filters)} filtre(s) actif(s)")
+        st.sidebar.success(f"{len(active_filters)} filtre(s) actif(s)")
         with st.sidebar.expander("Voir les filtres actifs"):
             for f in active_filters:
                 st.sidebar.write(f"• {f}")
     else:
-        st.sidebar.info("ℹ️ Aucun filtre appliqué")
+        st.sidebar.info("ℹAucun filtre appliqué")
     
     # Informations supplémentaires
     st.sidebar.markdown("---")
-    st.sidebar.markdown("### 📊 À propos des données")
+    st.sidebar.markdown("### À propos des données")
     st.sidebar.caption("""
     Les données analysées proviennent d'une enquête sur la santé mentale 
     des étudiants universitaires. Les résultats sont anonymisés et à usage pédagogique uniquement.

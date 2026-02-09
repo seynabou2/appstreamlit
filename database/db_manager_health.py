@@ -38,10 +38,10 @@ class MentalHealthDB:
                 SELECT * FROM df
             """)
             
-            st.success(f"✅ {len(df)} lignes chargées avec succès dans la base de données!")
+            st.success(f"{len(df)} lignes chargées avec succès dans la base de données!")
             
             # Afficher un aperçu des données
-            with st.expander("👀 Aperçu des données chargées"):
+            with st.expander("Aperçu des données chargées"):
                 st.dataframe(df.head(10), use_container_width=True)
                 st.write(f"**Nombre total de lignes :** {len(df)}")
                 st.write(f"**Nombre de colonnes :** {len(df.columns)}")
@@ -50,31 +50,65 @@ class MentalHealthDB:
             return df
             
         except Exception as e:
-            st.error(f"❌ Erreur lors du chargement du fichier : {str(e)}")
+            st.error(f"Erreur lors du chargement du fichier : {str(e)}")
+            import traceback
+            st.error(traceback.format_exc())
             return None
     
     def _clean_data(self, df):
         """Nettoie et prépare les données"""
-        # Normaliser les noms de colonnes (enlever espaces et mettre en minuscules)
-        df.columns = df.columns.str.strip().str.lower().str.replace(' ', '_')
+        # Mapping des colonnes originales vers des noms simplifiés
+        column_mapping = {
+            'Timestamp': 'timestamp',
+            'Choose your gender': 'gender',
+            'Age': 'age',
+            'What is your course?': 'course',
+            'Your current year of Study': 'year',
+            'What is your CGPA?': 'cgpa',
+            'Marital status': 'marital_status',
+            'Do you have Depression?': 'depression',
+            'Do you have Anxiety?': 'anxiety',
+            'Do you have Panic attack?': 'panic_attack',
+            'Did you seek any specialist for a treatment?': 'treatment'
+        }
         
-        # Convertir les colonnes numériques si nécessaire
-        numeric_columns = ['age', 'cgpa']
-        for col in numeric_columns:
-            if col in df.columns:
-                df[col] = pd.to_numeric(df[col], errors='coerce')
+        # Renommer les colonnes
+        df = df.rename(columns=column_mapping)
+        
+        # Convertir les colonnes numériques
+        if 'age' in df.columns:
+            df['age'] = pd.to_numeric(df['age'], errors='coerce')
+        
+        if 'cgpa' in df.columns:
+            # Gérer le format "3.00 - 3.49" en prenant la moyenne
+            def parse_cgpa(cgpa_str):
+                try:
+                    if isinstance(cgpa_str, str) and '-' in cgpa_str:
+                        parts = cgpa_str.split('-')
+                        min_val = float(parts[0].strip())
+                        max_val = float(parts[1].strip())
+                        return (min_val + max_val) / 2
+                    return float(cgpa_str)
+                except:
+                    return None
+            
+            df['cgpa'] = df['cgpa'].apply(parse_cgpa)
         
         # Nettoyer les valeurs textuelles
-        text_columns = ['gender', 'year', 'course', 'depression', 'anxiety', 'panic_attack', 'treatment']
+        text_columns = ['gender', 'year', 'course', 'depression', 'anxiety', 'panic_attack', 'treatment', 'marital_status']
         for col in text_columns:
             if col in df.columns:
                 df[col] = df[col].astype(str).str.strip()
+        
+        # Convertir timestamp si présent
+        if 'timestamp' in df.columns:
+            df['timestamp'] = pd.to_datetime(df['timestamp'], errors='coerce')
         
         return df
     
     def get_mental_health_summary(self, filters=None):
         """
-        KPI 1 : Résumé de la santé mentale (Dépression, Anxiété, Attaques de panique)
+        Résumé de la santé mentale (Dépression, Anxiété, Attaques de panique)
         
         Args:
             filters: Dictionnaire des filtres à appliquer
@@ -108,7 +142,7 @@ class MentalHealthDB:
     
     def get_health_by_gender(self, filters=None):
         """
-        KPI 2 : Santé mentale par genre
+        Santé mentale par genre
         
         Args:
             filters: Dictionnaire des filtres à appliquer
@@ -144,7 +178,7 @@ class MentalHealthDB:
     
     def get_performance_correlation(self, filters=None):
         """
-        KPI 3 : Corrélation entre performance académique (CGPA) et santé mentale
+        Corrélation entre performance académique (CGPA) et santé mentale
         
         Args:
             filters: Dictionnaire des filtres à appliquer
@@ -180,7 +214,7 @@ class MentalHealthDB:
     
     def get_cgpa_by_mental_health(self, filters=None):
         """
-        KPI 3 (complément) : CGPA moyen selon l'état de santé mentale
+        CGPA moyen selon l'état de santé mentale
         
         Args:
             filters: Dictionnaire des filtres à appliquer
@@ -188,20 +222,17 @@ class MentalHealthDB:
         Returns:
             DataFrame avec condition, avg_cgpa, student_count
         """
+        filter_clause = self._build_filter_clause(filters) if filters else ""
+        
         query = f"""
             SELECT 
                 'Depression' as condition,
                 depression as status,
-                AVG(cgpa) as avg_cgpa,
+                ROUND(AVG(cgpa), 2) as avg_cgpa,
                 COUNT(*) as student_count
             FROM {self.table_name}
             WHERE cgpa IS NOT NULL AND depression IS NOT NULL
-        """
-        
-        if filters:
-            query += self._build_filter_clause(filters)
-        
-        query += """
+            {filter_clause}
             GROUP BY depression
             
             UNION ALL
@@ -209,16 +240,11 @@ class MentalHealthDB:
             SELECT 
                 'Anxiety' as condition,
                 anxiety as status,
-                AVG(cgpa) as avg_cgpa,
+                ROUND(AVG(cgpa), 2) as avg_cgpa,
                 COUNT(*) as student_count
             FROM {self.table_name}
             WHERE cgpa IS NOT NULL AND anxiety IS NOT NULL
-        """
-        
-        if filters:
-            query += self._build_filter_clause(filters)
-        
-        query += """
+            {filter_clause}
             GROUP BY anxiety
             
             UNION ALL
@@ -226,16 +252,13 @@ class MentalHealthDB:
             SELECT 
                 'Panic Attack' as condition,
                 panic_attack as status,
-                AVG(cgpa) as avg_cgpa,
+                ROUND(AVG(cgpa), 2) as avg_cgpa,
                 COUNT(*) as student_count
             FROM {self.table_name}
             WHERE cgpa IS NOT NULL AND panic_attack IS NOT NULL
+            {filter_clause}
+            GROUP BY panic_attack
         """
-        
-        if filters:
-            query += self._build_filter_clause(filters)
-        
-        query += " GROUP BY panic_attack"
         
         try:
             result = self.conn.execute(query).fetchdf()
@@ -270,6 +293,8 @@ class MentalHealthDB:
         except:
             total_students = 1
         
+        filter_clause = self._build_filter_clause(filters) if filters else ""
+        
         # Requête principale pour les facteurs de risque
         query = f"""
             SELECT 
@@ -279,12 +304,7 @@ class MentalHealthDB:
                 ROUND(COUNT(*) * 100.0 / {total_students}, 2) as percentage
             FROM {self.table_name}
             WHERE depression IS NOT NULL
-        """
-        
-        if filters:
-            query += self._build_filter_clause(filters)
-        
-        query += f"""
+            {filter_clause}
             GROUP BY depression
             
             UNION ALL
@@ -296,12 +316,7 @@ class MentalHealthDB:
                 ROUND(COUNT(*) * 100.0 / {total_students}, 2) as percentage
             FROM {self.table_name}
             WHERE anxiety IS NOT NULL
-        """
-        
-        if filters:
-            query += self._build_filter_clause(filters)
-        
-        query += f"""
+            {filter_clause}
             GROUP BY anxiety
             
             UNION ALL
@@ -313,12 +328,11 @@ class MentalHealthDB:
                 ROUND(COUNT(*) * 100.0 / {total_students}, 2) as percentage
             FROM {self.table_name}
             WHERE panic_attack IS NOT NULL
+            {filter_clause}
+            GROUP BY panic_attack 
+            
+            ORDER BY category, status
         """
-        
-        if filters:
-            query += self._build_filter_clause(filters)
-        
-        query += " GROUP BY panic_attack ORDER BY category, status"
         
         try:
             result = self.conn.execute(query).fetchdf()
@@ -377,7 +391,7 @@ class MentalHealthDB:
         conditions = []
         
         # Filtre par genre
-        if filters.get('gender') and filters['gender']:
+        if filters.get('gender') and 'Tous' not in filters['gender']:
             genders_str = "', '".join(filters['gender'])
             conditions.append(f"gender IN ('{genders_str}')")
         
@@ -387,7 +401,7 @@ class MentalHealthDB:
             conditions.append(f"age BETWEEN {min_age} AND {max_age}")
         
         # Filtre par année d'études
-        if filters.get('year') and filters['year']:
+        if filters.get('year') and 'Tous' not in filters['year']:
             year_str = "', '".join(filters['year'])
             conditions.append(f"year IN ('{year_str}')")
         

@@ -13,7 +13,7 @@ def render_all_kpis(db, filters):
         filters: Dictionnaire des filtres actifs
     """
     
-    st.header("📊 Tableau de Bord - Indicateurs Clés")
+    st.header("Tableau de Bord - Indicateurs Clés")
     
     # KPI 1 : Vue d'ensemble de la santé mentale
     render_kpi_mental_health_overview(db, filters)
@@ -36,9 +36,9 @@ def render_all_kpis(db, filters):
 
 
 def render_kpi_mental_health_overview(db, filters):
-    """KPI 1 : Vue d'ensemble de la santé mentale"""
+    """Vue d'ensemble de la santé mentale"""
     
-    st.subheader("📊 KPI 1 : Vue d'Ensemble de la Santé Mentale")
+    st.subheader("Vue d'Ensemble de la Santé Mentale")
     
     # Récupérer les données
     df = db.get_mental_health_summary(filters)
@@ -70,7 +70,7 @@ def render_kpi_mental_health_overview(db, filters):
     
     with col2:
         st.metric(
-            "😔 Dépression",
+            "Dépression",
             f"{depression_count}",
             f"{depression_pct}%",
             delta_color="inverse",
@@ -79,7 +79,7 @@ def render_kpi_mental_health_overview(db, filters):
     
     with col3:
         st.metric(
-            "😰 Anxiété",
+            "Anxiété",
             f"{anxiety_count}",
             f"{anxiety_pct}%",
             delta_color="inverse",
@@ -88,7 +88,7 @@ def render_kpi_mental_health_overview(db, filters):
     
     with col4:
         st.metric(
-            "😱 Attaques de Panique",
+            "Attaques de Panique",
             f"{panic_count}",
             f"{panic_pct}%",
             delta_color="inverse",
@@ -136,18 +136,18 @@ def render_kpi_mental_health_overview(db, filters):
     with col1:
         # Condition la plus fréquente
         max_condition = conditions_data.loc[conditions_data['Nombre'].idxmax()]
-        st.info(f"⚠️ **Condition la plus fréquente** : {max_condition['Condition']} ({max_condition['Pourcentage']:.1f}%)")
+        st.info(f"**Condition la plus fréquente** : {max_condition['Condition']} ({max_condition['Pourcentage']:.1f}%)")
     
     with col2:
         # Taux de traitement
         treatment_pct = (treatment_count / total_students) * 100
-        st.success(f"💊 **Taux de traitement** : {treatment_pct:.1f}% des étudiants suivent un traitement")
+        st.success(f"**Taux de traitement** : {treatment_pct:.1f}% des étudiants suivent un traitement")
 
 
 def render_kpi_gender_analysis(db, filters):
     """KPI 2 : Analyse par genre"""
     
-    st.subheader("👥 KPI 2 : Analyse par Genre")
+    st.subheader("Analyse par Genre")
     
     # Récupérer les données
     df = db.get_health_by_gender(filters)
@@ -204,7 +204,7 @@ def render_kpi_gender_analysis(db, filters):
     st.plotly_chart(fig, use_container_width=True)
     
     # Tableau détaillé
-    with st.expander("📊 Voir les données détaillées"):
+    with st.expander("Voir les données détaillées"):
         display_df = df[['gender', 'total_students', 'depression_pct', 'anxiety_pct', 'panic_pct']].copy()
         display_df.columns = ['Genre', 'Total Étudiants', 'Dépression (%)', 'Anxiété (%)', 'Attaques de Panique (%)']
         st.dataframe(display_df, use_container_width=True, hide_index=True)
@@ -213,13 +213,13 @@ def render_kpi_gender_analysis(db, filters):
     if len(df) >= 2:
         max_depression_gender = df.loc[df['depression_pct'].idxmax(), 'gender']
         max_depression_pct = df['depression_pct'].max()
-        st.warning(f"⚠️ Le genre **{max_depression_gender}** présente le taux de dépression le plus élevé ({max_depression_pct:.1f}%)")
+        st.warning(f"Le genre **{max_depression_gender}** présente le taux de dépression le plus élevé ({max_depression_pct:.1f}%)")
 
 
 def render_kpi_performance_correlation(db, filters):
     """KPI 3 : Corrélation performance académique vs santé mentale"""
     
-    st.subheader("📈 KPI 3 : Performance Académique vs Santé Mentale")
+    st.subheader("Performance Académique vs Santé Mentale")
     
     # Récupérer les données
     df = db.get_performance_correlation(filters)
@@ -276,7 +276,7 @@ def render_kpi_performance_correlation(db, filters):
     cgpa_stats_df = db.get_cgpa_by_mental_health(filters)
     
     if not cgpa_stats_df.empty:
-        with st.expander("📊 CGPA Moyen par Condition"):
+        with st.expander("CGPA Moyen par Condition"):
             # Filtrer pour avoir une ligne par condition
             summary = cgpa_stats_df.groupby(['condition', 'status']).agg({
                 'avg_cgpa': 'mean',
@@ -292,15 +292,15 @@ def render_kpi_performance_correlation(db, filters):
     if avg_cgpa_depression > 0:
         diff = avg_cgpa_all - avg_cgpa_depression
         if diff > 0:
-            st.info(f"📉 Les étudiants avec dépression ont un CGPA moyen inférieur de **{diff:.2f}** points")
+            st.info(f"Les étudiants avec dépression ont un CGPA moyen inférieur de **{diff:.2f}** points")
         else:
-            st.success(f"📈 Pas d'impact significatif observé sur le CGPA")
+            st.success(f"Pas d'impact significatif observé sur le CGPA")
 
 
 def render_kpi_risk_factors(db, filters):
     """KPI 4 : Facteurs de risque et traitement"""
     
-    st.subheader("⚠️ KPI 4 : Facteurs de Risque et Traitement")
+    st.subheader("Facteurs de Risque et Traitement")
     
     # Récupérer les données
     df_risk = db.get_risk_factors_distribution(filters)
@@ -417,9 +417,9 @@ def render_kpi_risk_factors(db, filters):
             
             with col1:
                 if treatment_pct < 50:
-                    st.error(f"⚠️ Seulement **{treatment_pct:.1f}%** des étudiants suivent un traitement")
+                    st.error(f"Seulement **{treatment_pct:.1f}%** des étudiants suivent un traitement")
                 else:
-                    st.success(f"✅ **{treatment_pct:.1f}%** des étudiants suivent un traitement")
+                    st.success(f"**{treatment_pct:.1f}%** des étudiants suivent un traitement")
             
             with col2:
                 # CGPA des étudiants en traitement vs sans traitement
@@ -429,10 +429,10 @@ def render_kpi_risk_factors(db, filters):
                     if not no_treatment.empty:
                         no_treatment_cgpa = no_treatment['avg_cgpa'].iloc[0]
                         diff = treatment_cgpa - no_treatment_cgpa
-                        if diff > 0:st.info(f"📚 CGPA moyen avec traitement : {treatment_cgpa:.2f} (+{diff:.2f})")
+                        if diff > 0:st.info(f"CGPA moyen avec traitement : {treatment_cgpa:.2f} (+{diff:.2f})")
                     else:
                         st.info(f"📚 CGPA moyen avec traitement : {treatment_cgpa:.2f}")
                 else:
-                    st.info("ℹ️ Aucune donnée de CGPA disponible")
+                    st.info("Aucune donnée de CGPA disponible")
     else:
-        st.info("ℹ️ Aucune donnée de traitement disponible")
+        st.info("Aucune donnée de traitement disponible")
