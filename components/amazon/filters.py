@@ -1,143 +1,72 @@
 import streamlit as st
-import sys
-from pathlib import Path
+from typing import Dict, Any
 
-# Ajouter le répertoire parent au path pour les imports
-sys.path.append(str(Path(__file__).parent.parent))
-
-from database.db_manager_prime import AmazonPrimeDB
-from components.amazon.filters import render_filters
-from components.amazon.visualizations import render_all_kpis
-
-# Configuration de la page
-st.set_page_config(
-    page_title="Amazon Prime Analytics",
-    page_icon="🎬",
-    layout="wide"
-)
-
-# CSS personnalisé
-st.markdown("""
-    <style>
-    .main-title {
-        font-size: 2.5rem;
-        color: #00A8E1;
-        text-align: center;
-        margin-bottom: 1rem;
-    }
-    .subtitle {
-        text-align: center;
-        color: #666;
-        margin-bottom: 2rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
-
-# En-tête
-st.markdown('<h1 class="main-title">🎬 Amazon Prime Movies & TV Shows</h1>', unsafe_allow_html=True)
-st.markdown('<p class="subtitle">Analyse Complète du Catalogue de Streaming</p>', unsafe_allow_html=True)
-
-# Sidebar pour l'upload
-with st.sidebar:
-    st.header("📁 Import des Données")
+def render_filters(db) -> Dict[str, Any]:
+    """
+    Affiche les filtres dans la sidebar et retourne les valeurs sélectionnées.
     
-    uploaded_file = st.file_uploader(
-        "Choisissez le fichier CSV Amazon Prime",
-        type=['csv'],
-        help="Uploadez le fichier amazon_prime_titles.csv"
+    Args:
+        db: Instance de AmazonPrimeDB
+        
+    Returns:
+        Dict contenant les filtres sélectionnés
+    """
+    st.sidebar.header("🔍 Filtres")
+    
+    filters = {}
+    
+    # Filtre par type de contenu
+    st.sidebar.subheader("📺 Type de Contenu")
+    content_types = db.get_unique_values('type')
+    filters['content_type'] = st.sidebar.multiselect(
+        "Sélectionnez le type",
+        options=['Tous'] + content_types,
+        default=['Tous']
     )
     
-    st.markdown("---")
+    # Filtre par année de sortie
+    st.sidebar.subheader("📅 Année de Sortie")
+    min_year, max_year = db.get_year_range()
+    if min_year and max_year:
+        filters['year_range'] = st.sidebar.slider(
+            "Plage d'années",
+            min_value=int(min_year),
+            max_value=int(max_year),
+            value=(int(min_year), int(max_year))
+        )
+    else:
+        filters['year_range'] = None
     
-    st.info("""
-    📌 **Format attendu :**
-    - show_id
-    - type (Movie/TV Show)
-    - title
-    - director
-    - cast
-    - country
-    - date_added
-    - release_year
-    - rating
-    - duration
-    - listed_in (genres)
-    - description
-    """)
-
-# Contenu principal
-if uploaded_file is not None:
-    # Initialiser la base de données
-    db = AmazonPrimeDB()
+    # Filtre par rating
+    st.sidebar.subheader("⭐ Classification")
+    ratings = db.get_unique_values('rating')
+    filters['rating'] = st.sidebar.multiselect(
+        "Sélectionnez les classifications",
+        options=['Tous'] + ratings,
+        default=['Tous']
+    )
     
-    # Charger les données
-    df = db.load_csv(uploaded_file)
+    # Filtre par pays
+    st.sidebar.subheader("🌍 Pays de Production")
+    countries = db.get_top_countries(20)  # Top 20 pays
+    filters['country'] = st.sidebar.multiselect(
+        "Sélectionnez les pays",
+        options=['Tous'] + countries,
+        default=['Tous']
+    )
     
-    if df is not None:
-        st.markdown("---")
-        
-        # Afficher les filtres et récupérer les valeurs
-        filters = render_filters(db)
-        
-        st.markdown("---")
-        
-        # Afficher les KPI
-        render_all_kpis(db, filters)
-        
-        # Section données brutes (optionnel)
-        st.markdown("---")
-        with st.expander("📋 Voir les Données Brutes"):
-            st.dataframe(df, use_container_width=True, height=400)
-            
-            # Bouton de téléchargement
-            csv = df.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Télécharger les données filtrées (CSV)",
-                data=csv,
-                file_name='amazon_prime_filtered.csv',
-                mime='text/csv',
-            )
-
-else:
-    # Message d'accueil si aucun fichier n'est uploadé
-    st.info("👆 Veuillez uploader le fichier CSV Amazon Prime pour commencer l'analyse")
+    # Filtre par genre
+    st.sidebar.subheader("🎭 Genres")
+    genres = db.get_top_genres(15)  # Top 15 genres
+    filters['genre'] = st.sidebar.multiselect(
+        "Sélectionnez les genres",
+        options=['Tous'] + genres,
+        default=['Tous']
+    )
     
-    # Instructions
-    st.markdown("### 📖 Instructions")
-    st.markdown("""
-    1. Téléchargez le dataset depuis [Kaggle](https://www.kaggle.com/datasets/shivamb/amazon-prime-movies-and-tv-shows)
-    2. Uploadez le fichier `amazon_prime_titles.csv` dans la barre latérale
-    3. Utilisez les filtres pour affiner votre analyse
-    4. Explorez les 4 KPI avec des visualisations interactives
-    """)
+    # Bouton reset
+    st.sidebar.markdown("---")
+    if st.sidebar.button("🔄 Réinitialiser les filtres"):
+        st.rerun()
     
-    # Aperçu des KPI
-    st.markdown("### 🎯 KPI Disponibles")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.markdown("""
-        **📈 KPI 1 : Évolution du Catalogue**
-        - Visualisation de la croissance du contenu dans le temps
-        - Tendances d'ajout de films et séries
-        
-        **🎭 KPI 2 : Top Genres**
-        - Les 10 genres les plus représentés
-        - Distribution par catégorie de contenu
-        """)
-    
-    with col2:
-        st.markdown("""
-        **🌍 KPI 3 : Répartition Géographique**
-        - Pays de production principaux
-        - Diversité géographique du catalogue
-        
-        **🎬 KPI 4 : Films vs Séries**
-        - Comparaison quantitative
-        - Évolution temporelle
-        """)
-
-# Footer
-st.markdown("---")
-st.caption("🎬 Amazon Prime Analytics | Projet MBAESG 2024-2025")
+    return filters
