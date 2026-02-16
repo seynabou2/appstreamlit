@@ -46,6 +46,8 @@ python -m streamlit run app.py
 
 L'application s'ouvrira automatiquement dans votre navigateur à l'adresse `http://localhost:8501`
 
+L'application est également disponible dans le cloud à l'adresse suivante : https://projetmbaesg.streamlit.app/
+
 ## Structure du Projet
 ```
 projet-streamlit/
