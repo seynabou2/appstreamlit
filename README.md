@@ -139,6 +139,9 @@ projet-streamlit/
 4. **Appliquer des filtres** dans la barre latérale
 5. **Explorer les visualisations** interactives
 
+Vous pouvez également accéder directement à l'application déjà déployée dans le cloud : https://projetmbaesg.streamlit.app/
+
+
 ## Licence
 
 Projet académique - MBAESG 2024-2025
